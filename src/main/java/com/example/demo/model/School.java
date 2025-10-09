@@ -12,7 +12,8 @@ public class School {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long school_id;
 
-    private String school_name;
+    @Column(name = "school_name")
+    private String schoolName;
 
     @Enumerated(EnumType.STRING)
     private SchoolType school_type;
@@ -29,12 +30,12 @@ public class School {
         this.school_id = school_id;
     }
 
-    public String getSchool_name() {
-        return school_name;
+    public String getSchoolName() {
+        return schoolName;
     }
 
-    public void setSchool_name(String school_name) {
-        this.school_name = school_name;
+    public void setSchoolName(String schoolName) {
+        this.schoolName = schoolName;
     }
 
     public SchoolType getSchool_type() {

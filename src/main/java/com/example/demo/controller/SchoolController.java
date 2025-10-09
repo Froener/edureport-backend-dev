@@ -4,6 +4,7 @@ package com.example.demo.controller;
 import com.example.demo.model.School;
 import com.example.demo.repository.SchoolRepository;
 import com.example.demo.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,13 @@ public class SchoolController {
         return repository.findById(id).orElseThrow();
     }
 
+    @GetMapping("/name/{name}")
+    public ResponseEntity<School> getSchoolByName(@PathVariable String name) {
+        return repository.findBySchoolName(name)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public School create(@RequestBody School school) {
         school.setUser(userRepository.findById(school.getUser().getUser_id()).orElseThrow());
@@ -40,7 +48,7 @@ public class SchoolController {
     @PutMapping("/{id}")
     public School update(@PathVariable Long id, @RequestBody School updated) {
         School school = repository.findById(id).orElseThrow();
-        school.setSchool_name(updated.getSchool_name());
+        school.setSchoolName(updated.getSchoolName());
         school.setSchool_type(updated.getSchool_type());
         school.setUser(userRepository.findById(updated.getUser().getUser_id()).orElseThrow());
         return repository.save(school);
