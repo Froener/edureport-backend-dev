@@ -102,7 +102,8 @@ public class AuthController {
                     refreshToken.getToken(),
                     savedUser.getUser_id(),
                     savedUser.getEmail(),
-                    savedUser.getUser_type().toString()
+                    savedUser.getUser_type().toString(),
+                    savedUser.getFull_name()
             );
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(response);
@@ -146,7 +147,8 @@ public class AuthController {
                     refreshToken.getToken(),
                     user.getUser_id(),
                     user.getEmail(),
-                    user.getUser_type().toString()
+                    user.getUser_type().toString(),
+                    user.getFull_name()
             );
 
             return ResponseEntity.ok(response);
