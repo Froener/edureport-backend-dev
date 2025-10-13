@@ -44,12 +44,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // Create authentication token
+            // Convert userType to ROLE_ format (e.g., "admin" -> "ROLE_ADMIN")
+            String role = "ROLE_" + userType.toUpperCase();
+
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(
                             email,
                             null,
-                            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userType.toUpperCase()))
+                            Collections.singletonList(new SimpleGrantedAuthority(role))
                     );
             authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);

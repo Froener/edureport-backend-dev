@@ -12,6 +12,7 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -34,6 +35,7 @@ public class JwtUtil {
         claims.put("userId", userId);
         claims.put("email", email);
         claims.put("userType", userType);
+        claims.put("jti", UUID.randomUUID().toString());
         return createToken(claims, email, expiration);
     }
 
@@ -41,6 +43,8 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("email", email);
+        claims.put("jti", UUID.randomUUID().toString());
+        claims.put("type", "refresh");
         return createToken(claims, email, refreshExpiration);
     }
 
@@ -53,6 +57,7 @@ public class JwtUtil {
                 .setSubject(subject)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
+                .setId(UUID.randomUUID().toString())
                 .signWith(getSigninKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

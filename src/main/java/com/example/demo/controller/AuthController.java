@@ -116,6 +116,7 @@ public class AuthController {
     }
     // Add these methods to your existing AuthController
 
+    // In AuthController.java, add this method if it doesn't exist:
     @PostMapping("/signup/school")
     @Transactional
     public ResponseEntity<?> signupSchool(@RequestBody Map<String, Object> payload) {
@@ -137,7 +138,7 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse("Email é obrigatório"));
             }
-            if (userMap.get("password_hash") == null || ((String) userMap.get("password_hash")).length() < 6) {
+            if (userMap.get("password_hash") == null || userMap.get("password_hash").length() < 6) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse("Senha deve ter no mínimo 6 caracteres"));
             }
@@ -187,8 +188,8 @@ public class AuthController {
     @Transactional
     public ResponseEntity<?> signupAdmin(@RequestBody Map<String, Object> payload) {
         try {
-            Map<String, String> userMap = (Map<String, String>) payload.get("user");
-            String email = userMap.get("email");
+            Map<String, Object> userMap = (Map<String, Object>) payload.get("user");
+            String email = (String) userMap.get("email");
 
             if(userRepository.findByEmail(email).isPresent()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -196,7 +197,7 @@ public class AuthController {
             }
 
             // Validate required fields
-            if (userMap.get("full_name") == null || userMap.get("full_name").trim().isEmpty()) {
+            if (userMap.get("full_name") == null || ((String) userMap.get("full_name")).trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse("Nome completo é obrigatório"));
             }
@@ -204,51 +205,51 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse("Email é obrigatório"));
             }
-            if (userMap.get("password_hash") == null || userMap.get("password_hash").length() < 6) {
+            if (userMap.get("password_hash") == null || ((String) userMap.get("password_hash")).length() < 6) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(createErrorResponse("Senha deve ter no mínimo 6 caracteres"));
             }
 
             User user = new User();
-            user.setFull_name(userMap.get("full_name"));
-            user.setSocial_name(userMap.get("social_name")); // Add this line
+            user.setFull_name((String) userMap.get("full_name"));
+            user.setSocial_name((String) userMap.get("social_name"));
             user.setEmail(email);
-            user.setPassword_hash(passwordEncoder.encode(userMap.get("password_hash")));
+            user.setPassword_hash(passwordEncoder.encode((String) userMap.get("password_hash")));
             user.setUser_type(User.UserType.admin);
-            user.setAddress_state(userMap.get("address_state"));
-            user.setAddress_city(userMap.get("address_city"));
-            user.setAddress_neighborhood(userMap.get("address_neighborhood"));
+            user.setAddress_state((String) userMap.get("address_state"));
+            user.setAddress_city((String) userMap.get("address_city"));
+            user.setAddress_neighborhood((String) userMap.get("address_neighborhood"));
 
             // Handle birth date if provided
             if (userMap.get("birth_date") != null) {
                 try {
-                    user.setBirth_date(LocalDate.parse(userMap.get("birth_date")));
+                    user.setBirth_date(LocalDate.parse((String) userMap.get("birth_date")));
                 } catch (Exception e) {
                     // Log but don't fail if birth date parsing fails
                     System.out.println("Warning: Could not parse birth date: " + userMap.get("birth_date"));
                 }
             }
 
-            user = userRepository.save(user);
+            User savedUser = userRepository.save(user);
 
             Admin admin = new Admin();
-            admin.setUser(user);
-            admin = adminRepository.save(admin);
+            admin.setUser(savedUser);
+            adminRepository.save(admin);
 
             String accessToken = jwtUtil.generateToken(
-                    user.getUser_id(),
-                    user.getEmail(),
-                    user.getUser_type().toString()
+                    savedUser.getUser_id(),
+                    savedUser.getEmail(),
+                    savedUser.getUser_type().toString()
             );
-            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser);
 
             LoginResponse response = new LoginResponse(
                     accessToken,
                     refreshToken.getToken(),
-                    user.getUser_id(),
-                    user.getEmail(),
-                    user.getUser_type().toString(),
-                    user.getFull_name()
+                    savedUser.getUser_id(),
+                    savedUser.getEmail(),
+                    savedUser.getUser_type().toString(),
+                    savedUser.getFull_name()
             );
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);

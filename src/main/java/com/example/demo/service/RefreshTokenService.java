@@ -27,9 +27,22 @@ public class RefreshTokenService {
     @Transactional
     public RefreshToken createRefreshToken(User user) {
         refreshTokenRepository.deleteByUser(user);
+        // Small delay to ensure the delete is committed
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        String token = jwtUtil.generateRefreshToken(user.getUser_id(), user.getEmail());
+        int attempts = 0;
+        while (refreshTokenRepository.findByToken(token).isPresent() && attempts < 3) {
+            token = jwtUtil.generateRefreshToken(user.getUser_id(), user.getEmail());
+            attempts++;
+        }
+
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
-        refreshToken.setToken(jwtUtil.generateRefreshToken(user.getUser_id(), user.getEmail()));
+        refreshToken.setToken(token);
         refreshToken.setExpiryDate(LocalDateTime.now().plusSeconds(refreshExpiration / 1000));
         refreshToken.setCreatedAt(LocalDateTime.now());
 

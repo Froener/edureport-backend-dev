@@ -34,21 +34,26 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public endpoints - anyone can access
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/users/signup").permitAll()
                         .requestMatchers("/api/schools/signup").permitAll()
-                        .requestMatchers("/api/admins/signup").permitAll()
-                        .requestMatchers("/api/students/signup").permitAll()
-                        // Allow public access to school search for registration
                         .requestMatchers("/api/schools/name/**").permitAll()
                         .requestMatchers("/api/schools").permitAll() // Allow listing schools for registration
-                        // Protect other endpoints
-                        .requestMatchers("/api/users/**").authenticated()
-                        .requestMatchers("/api/schools/**").authenticated()
-                        .requestMatchers("/api/students/**").authenticated()
-                        .requestMatchers("/api/admins/**").authenticated()
+
+                        // Admin only endpoints
+                        .requestMatchers("/api/admins/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/users/**").hasAuthority("ROLE_ADMIN") // Only admins can manage users
+
+                        // School-specific endpoints - schools and admins can access
+                        .requestMatchers("/api/schools/**").hasAnyAuthority("ROLE_SCHOOL", "ROLE_ADMIN")
+
+                        // Student-specific endpoints - students and admins can access
+                        .requestMatchers("/api/students/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+
+                        // Other endpoints require authentication but any role
                         .requestMatchers("/api/feedback/**").authenticated()
                         .requestMatchers("/api/tags/**").authenticated()
+
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
