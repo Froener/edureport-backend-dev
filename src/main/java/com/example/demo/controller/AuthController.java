@@ -4,10 +4,8 @@ import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.LoginResponse;
 import com.example.demo.dto.RefreshTokenRequest;
 import com.example.demo.dto.StudentSignupRequest;
-import com.example.demo.model.RefreshToken;
-import com.example.demo.model.School;
-import com.example.demo.model.Student;
-import com.example.demo.model.User;
+import com.example.demo.model.*;
+import com.example.demo.repository.AdminRepository;
 import com.example.demo.repository.SchoolRepository;
 import com.example.demo.repository.StudentRepository;
 import com.example.demo.repository.UserRepository;
@@ -21,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +36,8 @@ public class AuthController {
 
     @Autowired
     private SchoolRepository schoolRepository;
+    @Autowired
+    private AdminRepository adminRepository;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -111,6 +112,151 @@ public class AuthController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("Erro ao criar conta: "+ e.getMessage()));
+        }
+    }
+    // Add these methods to your existing AuthController
+
+    @PostMapping("/signup/school")
+    @Transactional
+    public ResponseEntity<?> signupSchool(@RequestBody Map<String, Object> payload) {
+        try {
+            Map<String, String> userMap = (Map<String, String>) payload.get("user");
+            String email = userMap.get("email");
+
+            if(userRepository.findByEmail(email).isPresent()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Email já cadastrado"));
+            }
+
+            // Validate required fields
+            if (userMap.get("full_name") == null || userMap.get("full_name").trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Nome completo é obrigatório"));
+            }
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Email é obrigatório"));
+            }
+            if (userMap.get("password_hash") == null || ((String) userMap.get("password_hash")).length() < 6) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Senha deve ter no mínimo 6 caracteres"));
+            }
+
+            User user = new User();
+            user.setFull_name(userMap.get("full_name"));
+            user.setEmail(email);
+            user.setPassword_hash(passwordEncoder.encode(userMap.get("password_hash")));
+            user.setUser_type(User.UserType.school);
+            user.setAddress_state(userMap.get("address_state"));
+            user.setAddress_city(userMap.get("address_city"));
+            user.setAddress_neighborhood(userMap.get("address_neighborhood"));
+            user = userRepository.save(user);
+
+            School school = new School();
+            school.setSchoolName((String) payload.get("school_name"));
+            school.setSchool_type(School.SchoolType.valueOf(((String) payload.get("school_type")).toLowerCase()));
+            school.setUser(user);
+            school = schoolRepository.save(school);
+
+            String accessToken = jwtUtil.generateToken(
+                    user.getUser_id(),
+                    user.getEmail(),
+                    user.getUser_type().toString()
+            );
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+            LoginResponse response = new LoginResponse(
+                    accessToken,
+                    refreshToken.getToken(),
+                    user.getUser_id(),
+                    user.getEmail(),
+                    user.getUser_type().toString(),
+                    user.getFull_name()
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Erro ao criar conta da escola: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/signup/admin")
+    @Transactional
+    public ResponseEntity<?> signupAdmin(@RequestBody Map<String, Object> payload) {
+        try {
+            Map<String, String> userMap = (Map<String, String>) payload.get("user");
+            String email = userMap.get("email");
+
+            if(userRepository.findByEmail(email).isPresent()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Email já cadastrado"));
+            }
+
+            // Validate required fields
+            if (userMap.get("full_name") == null || userMap.get("full_name").trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Nome completo é obrigatório"));
+            }
+            if (email == null || email.trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Email é obrigatório"));
+            }
+            if (userMap.get("password_hash") == null || userMap.get("password_hash").length() < 6) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Senha deve ter no mínimo 6 caracteres"));
+            }
+
+            User user = new User();
+            user.setFull_name(userMap.get("full_name"));
+            user.setSocial_name(userMap.get("social_name")); // Add this line
+            user.setEmail(email);
+            user.setPassword_hash(passwordEncoder.encode(userMap.get("password_hash")));
+            user.setUser_type(User.UserType.admin);
+            user.setAddress_state(userMap.get("address_state"));
+            user.setAddress_city(userMap.get("address_city"));
+            user.setAddress_neighborhood(userMap.get("address_neighborhood"));
+
+            // Handle birth date if provided
+            if (userMap.get("birth_date") != null) {
+                try {
+                    user.setBirth_date(LocalDate.parse(userMap.get("birth_date")));
+                } catch (Exception e) {
+                    // Log but don't fail if birth date parsing fails
+                    System.out.println("Warning: Could not parse birth date: " + userMap.get("birth_date"));
+                }
+            }
+
+            user = userRepository.save(user);
+
+            Admin admin = new Admin();
+            admin.setUser(user);
+            admin = adminRepository.save(admin);
+
+            String accessToken = jwtUtil.generateToken(
+                    user.getUser_id(),
+                    user.getEmail(),
+                    user.getUser_type().toString()
+            );
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+            LoginResponse response = new LoginResponse(
+                    accessToken,
+                    refreshToken.getToken(),
+                    user.getUser_id(),
+                    user.getEmail(),
+                    user.getUser_type().toString(),
+                    user.getFull_name()
+            );
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Erro ao criar conta de administrador: " + e.getMessage()));
         }
     }
 
