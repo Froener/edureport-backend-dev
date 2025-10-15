@@ -10,9 +10,9 @@ import com.example.demo.repository.SchoolRepository;
 import com.example.demo.repository.StudentRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.security.JwtUtil;
+import com.example.demo.service.AuthenticationService;
 import com.example.demo.service.RefreshTokenService;
 import jakarta.transaction.Transactional;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,24 +28,34 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:5173")
 public class AuthController {
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private StudentRepository studentRepository;
+    private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
+    private final SchoolRepository schoolRepository;
+    private final AdminRepository adminRepository;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
+    private final AuthenticationService authenticationService;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
-    private AdminRepository adminRepository;
+    public AuthController(
+            UserRepository userRepository,
+            StudentRepository studentRepository,
+            SchoolRepository schoolRepository,
+            AdminRepository adminRepository,
+            JwtUtil jwtUtil,
+            RefreshTokenService refreshTokenService,
+            AuthenticationService authenticationService) {
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
-
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.userRepository = userRepository;
+        this.studentRepository = studentRepository;
+        this.schoolRepository = schoolRepository;
+        this.adminRepository = adminRepository;
+        this.jwtUtil = jwtUtil;
+        this.refreshTokenService = refreshTokenService;
+        this.authenticationService = authenticationService;
+        this.passwordEncoder = new BCryptPasswordEncoder();
+    }
 
     @PostMapping("/signup/student")
     @Transactional
@@ -114,9 +124,7 @@ public class AuthController {
                     .body(createErrorResponse("Erro ao criar conta: "+ e.getMessage()));
         }
     }
-    // Add these methods to your existing AuthController
 
-    // In AuthController.java, add this method if it doesn't exist:
     @PostMapping("/signup/school")
     @Transactional
     public ResponseEntity<?> signupSchool(@RequestBody Map<String, Object> payload) {
@@ -339,21 +347,12 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String authHeader) {
         try {
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                Long userId = jwtUtil.extractUserId(token);
+            User user = authenticationService.getCurrentUserOrThrow();
+            refreshTokenService.deleteByUser(user);
 
-                Optional<User> userOpt = userRepository.findById(userId);
-                if (userOpt.isPresent()) {
-                    refreshTokenService.deleteByUser(userOpt.get());
-                }
-            }
-
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Logged out successfully");
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(createErrorResponse("Ocorreu um erro durante o logout"));
+            return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
         }
     }
 

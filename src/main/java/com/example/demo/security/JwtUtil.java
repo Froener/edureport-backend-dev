@@ -100,13 +100,5 @@ public class JwtUtil {
                 .getBody();
     }
 
-    // Add this method to your existing JwtUtil class
-    public Boolean validateToken(String token, String email) {
-        try {
-            final String extractedEmail = extractEmail(token);
-            return (extractedEmail.equals(email) && !isTokenExpired(token));
-        } catch (Exception e) {
-            return false;
-        }
-    }
+
 }

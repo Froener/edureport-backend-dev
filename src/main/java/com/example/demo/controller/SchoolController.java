@@ -46,38 +46,6 @@ public class SchoolController {
 
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<?> signUpSchool(@RequestBody Map<String, Object> payload) {
-        try {
-            Map<String, String> userMap = (Map<String, String>) payload.get("user");
-            User user = new User();
-            user.setFull_name(userMap.get("full_name"));
-            user.setEmail(userMap.get("email"));
-            user.setPassword_hash(userMap.get("password_hash"));
-            user.setUser_type(User.UserType.school);
-            user.setAddress_state(userMap.get("address_state"));
-            user.setAddress_city(userMap.get("address_city"));
-            user.setAddress_neighborhood(userMap.get("address_neighborhood"));
-            user = userRepository.save(user);
-
-            School school = new School();
-            school.setSchoolName((String) payload.get("school_name"));
-            school.setSchool_type(School.SchoolType.valueOf(((String)
-                    payload.get("school_type")).toLowerCase()));
-            school.setUser(user);
-            school =  repository.save(school);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("user", user);
-            response.put("school", school);
-
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            return ResponseEntity.status(400).body((Map.of("error", e.getMessage())));
-        }
-
-    }
 
     @PutMapping("/{id}")
     public School update(@PathVariable Long id, @RequestBody School updated) {

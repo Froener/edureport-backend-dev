@@ -40,6 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/schools/name/**").permitAll()
                         .requestMatchers("/api/schools").permitAll() // Allow listing schools for registration
 
+                        //Profile endpoint - qlquer usuario autenticado pode acessar
+                        .requestMatchers("/api/profile/me").authenticated()
+
                         // Admin only endpoints
                         .requestMatchers("/api/admins/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/users/**").hasAuthority("ROLE_ADMIN") // Only admins can manage users
