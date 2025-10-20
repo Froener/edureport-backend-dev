@@ -1,10 +1,12 @@
 package com.example.demo.controller;
 
 
+import com.example.demo.dto.SchoolFeedbackDTO;
 import com.example.demo.model.School;
 import com.example.demo.model.User;
 import com.example.demo.repository.SchoolRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.SchoolFeedbackService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,10 +21,12 @@ public class SchoolController {
 
     private final SchoolRepository repository;
     private final UserRepository userRepository;
+    private final SchoolFeedbackService schoolFeedbackService;
 
-    public SchoolController(SchoolRepository repository, UserRepository userRepository) {
+    public SchoolController(SchoolRepository repository, UserRepository userRepository, SchoolFeedbackService schoolFeedbackService) {
         this.repository = repository;
         this.userRepository = userRepository;
+        this.schoolFeedbackService = schoolFeedbackService;
     }
 
     @GetMapping
@@ -45,7 +49,28 @@ public class SchoolController {
         return ResponseEntity.ok(schools);
 
     }
+    @GetMapping("/{schoolId}/feedback")
+    public ResponseEntity<?> getSchoolWithFeedback(@PathVariable Long schoolId) {
+        try {
+            SchoolFeedbackDTO schoolFeedback = schoolFeedbackService.getSchoolWithFeedback(schoolId);
+            if (schoolFeedback == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Escola não encontrada"));
+            }
+            return ResponseEntity.ok(schoolFeedback);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Erro ao buscar feedback da escola"));
+        }
+    }
 
+    @GetMapping("/feedback")
+    public ResponseEntity<?> getAllSchoolsWithFeedback() {
+        try {
+            List<SchoolFeedbackDTO> schoolsWithFeedback = schoolFeedbackService.getAllSchoolsWithFeedback();
+            return ResponseEntity.ok(schoolsWithFeedback);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Erro ao buscar escolas com feedback"));
+        }
+    }
 
     @PutMapping("/{id}")
     public School update(@PathVariable Long id, @RequestBody School updated) {

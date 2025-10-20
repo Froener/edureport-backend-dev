@@ -12,10 +12,16 @@ public class Tag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long tag_id;
 
+    @Column(nullable = false)
     private String tag_nome;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TagType tag_positivo_negativo;
+
+    @ManyToOne
+    @JoinColumn(name= "school_id", nullable = false)
+    private School school;
 
     public Long getTag_id() {
         return tag_id;
@@ -39,5 +45,13 @@ public class Tag {
 
     public void setTag_positivo_negativo(TagType tag_positivo_negativo) {
         this.tag_positivo_negativo = tag_positivo_negativo;
+    }
+
+    public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
     }
 }
