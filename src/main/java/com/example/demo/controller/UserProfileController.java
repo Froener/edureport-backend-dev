@@ -7,6 +7,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.AdminRepository;
 import com.example.demo.repository.SchoolRepository;
 import com.example.demo.repository.StudentRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.AuthenticationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +22,14 @@ import java.util.Objects;
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserProfileController {
 
+    private final UserRepository userRepository;
     private final AuthenticationService authService;
     private final StudentRepository studentRepository;
     private final SchoolRepository schoolRepository;
     private final AdminRepository adminRepository;
 
-    public UserProfileController(AuthenticationService authService, StudentRepository studentRepository, SchoolRepository schoolRepository, AdminRepository adminRepository) {
+    public UserProfileController(UserRepository userRepository, AuthenticationService authService, StudentRepository studentRepository, SchoolRepository schoolRepository, AdminRepository adminRepository) {
+        this.userRepository = userRepository;
         this.authService = authService;
         this.studentRepository = studentRepository;
         this.schoolRepository = schoolRepository;
@@ -94,8 +97,8 @@ public class UserProfileController {
             if(updates.containsKey("socialName")) {
                 user.setSocial_name((String) updates.get("socialName"));
             }
-            if (updates.containsKey("adressState")) {
-                user.setAddress_state((String) updates.get("adressState"));
+            if (updates.containsKey("addressState")) {
+                user.setAddress_state((String) updates.get("addressState"));
             }
             if (updates.containsKey("addressCity")) {
                 user.setAddress_city((String) updates.get("addressCity"));
@@ -103,6 +106,8 @@ public class UserProfileController {
             if (updates.containsKey("addressNeighborhood")) {
                 user.setAddress_neighborhood((String) updates.get("addressNeighborhood"));
             }
+
+            userRepository.save(user);
             return ResponseEntity.ok(Map.of("message", "Profile updated succesfully"));
 
 
