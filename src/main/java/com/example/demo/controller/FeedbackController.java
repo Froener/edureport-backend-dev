@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("api/feedback")
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class FeedbackController {
     private final FeedbackRepository repository;
     private final StudentRepository studentRepository;
