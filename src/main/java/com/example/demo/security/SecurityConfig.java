@@ -53,6 +53,18 @@ public class SecurityConfig {
                         // Student-specific endpoints - students and admins can access
                         .requestMatchers("/api/students/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
 
+                        // Swagger endpoits
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/swagger-resources",
+                                "/webjars/**",
+                                "/configuration/ui",
+                                "/configuration/security"
+                        ).permitAll()
+
                         // Other endpoints require authentication but any role
                         .requestMatchers("/api/feedback/**").authenticated()
                         .requestMatchers("/api/tags/**").authenticated()
