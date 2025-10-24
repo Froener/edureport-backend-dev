@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.Arrays;
+
 @Configuration
 public class CorsConfig {
 
@@ -17,7 +19,16 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins(crossOrigins.split(","));
+                // Split by comma and trim spaces
+                String[] origins = Arrays.stream(crossOrigins.split(","))
+                        .map(String::trim)
+                        .toArray(String[]::new);
+
+                registry.addMapping("/**")
+                        .allowedOrigins(origins)
+                        .allowedMethods("*")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }
