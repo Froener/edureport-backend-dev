@@ -1,15 +1,14 @@
 package com.example.demo.dto;
 
 import com.example.demo.model.School;
-import com.example.demo.model.Tag;
 import java.util.List;
 
 public class SchoolFeedbackDTO {
     private School school;
-    private List<Tag> positiveTags;
-    private List<Tag> negativeTags;
+    private List<TagWithCountDTO> positiveTags;
+    private List<TagWithCountDTO> negativeTags;
 
-    public SchoolFeedbackDTO(School school, List<Tag> positiveTags, List<Tag> negativeTags) {
+    public SchoolFeedbackDTO(School school, List<TagWithCountDTO> positiveTags, List<TagWithCountDTO> negativeTags) {
         this.school = school;
         this.positiveTags = positiveTags;
         this.negativeTags = negativeTags;
@@ -19,9 +18,9 @@ public class SchoolFeedbackDTO {
     public School getSchool() { return school; }
     public void setSchool(School school) { this.school = school; }
 
-    public List<Tag> getPositiveTags() { return positiveTags; }
-    public void setPositiveTags(List<Tag> positiveTags) { this.positiveTags = positiveTags; }
+    public List<TagWithCountDTO> getPositiveTags() { return positiveTags; }
+    public void setPositiveTags(List<TagWithCountDTO> positiveTags) { this.positiveTags = positiveTags; }
 
-    public List<Tag> getNegativeTags() { return negativeTags; }
-    public void setNegativeTags(List<Tag> negativeTags) { this.negativeTags = negativeTags; }
+    public List<TagWithCountDTO> getNegativeTags() { return negativeTags; }
+    public void setNegativeTags(List<TagWithCountDTO> negativeTags) { this.negativeTags = negativeTags; }
 }

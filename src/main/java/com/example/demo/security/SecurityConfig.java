@@ -46,12 +46,15 @@ public class SecurityConfig {
                         // Admin only endpoints
                         .requestMatchers("/api/admins/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/users/**").hasAuthority("ROLE_ADMIN") // Only admins can manage users
+                        .requestMatchers("/api/school-feedback/all").hasAuthority("ROLE_ADMIN")
 
                         // School-specific endpoints - schools and admins can access
                         .requestMatchers("/api/schools/**").hasAnyAuthority("ROLE_SCHOOL", "ROLE_ADMIN")
+                        .requestMatchers("/api/school-feedback/my-school").hasAuthority("ROLE_SCHOOL")
 
                         // Student-specific endpoints - students and admins can access
                         .requestMatchers("/api/students/**").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+                        .requestMatchers("/api/school-feedback/student-school").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
 
                         // Swagger endpoits
                         .requestMatchers(

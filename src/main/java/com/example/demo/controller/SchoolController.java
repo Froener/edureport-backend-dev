@@ -8,6 +8,7 @@ import com.example.demo.repository.SchoolRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.SchoolFeedbackService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -63,7 +64,9 @@ public class SchoolController {
     }
 
     @GetMapping("/feedback")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> getAllSchoolsWithFeedback() {
+        // This is now deprecated - use /api/school-feedback/all instead
         try {
             List<SchoolFeedbackDTO> schoolsWithFeedback = schoolFeedbackService.getAllSchoolsWithFeedback();
             return ResponseEntity.ok(schoolsWithFeedback);
