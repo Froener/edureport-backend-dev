@@ -22,7 +22,7 @@ public class Feedback {
     @JoinColumn(name = "school_id", nullable = false)
     private School school;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "feedback_tags",
             joinColumns = @JoinColumn(name = "feedback_id"),
