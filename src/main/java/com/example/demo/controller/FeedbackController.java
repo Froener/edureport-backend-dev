@@ -1,9 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.Feedback;
-import com.example.demo.model.Tag;
-import com.example.demo.model.Student;
-import com.example.demo.model.User;
+import com.example.demo.model.*;
 import com.example.demo.repository.FeedbackRepository;
 import com.example.demo.repository.SchoolRepository;
 import com.example.demo.repository.StudentRepository;
@@ -72,11 +69,24 @@ public class FeedbackController {
                     .map(Integer::longValue)
                     .collect(Collectors.toList());
 
-            // Create feedback
-            Feedback feedback = new Feedback();
-            feedback.setStudent(student);
-            feedback.setSchool(schoolRepository.findById(schoolId)
-                    .orElseThrow(() -> new RuntimeException("Escola não encontrada")));
+            // Check if feedback already exists for this student and school
+            Optional<Feedback> existingFeedbackOpt = repository.findByStudentIdAndSchoolId(student.getStudent_id(), schoolId);
+
+            Feedback feedback;
+            if (existingFeedbackOpt.isPresent()) {
+                // Update EXISTING feedback
+                feedback = existingFeedbackOpt.get();
+                feedback.setCreated_at(java.time.LocalDateTime.now());
+            } else {
+                // Create NEW feedback
+                feedback = new Feedback();
+                feedback.setStudent(student);
+                feedback.setSchool(schoolRepository.findById(schoolId)
+                        .orElseThrow(() -> new RuntimeException("Escola não encontrada")));
+            }
+
+
+
 
             // Set tags
             Set<Tag> tags = new HashSet<>();
@@ -159,4 +169,40 @@ public class FeedbackController {
                     .body(Map.of("error", "Falha ao buscar feedback da escola: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/my-feedback/current")
+    public ResponseEntity<?> getMyCurrentFeedback() {
+        try {
+            User currentUser = authService.getCurrentUserOrThrow();
+
+            if (currentUser.getUser_type() != User.UserType.student) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Apenas estudantes podem visualizar feedback"));
+            }
+
+            Student student = studentRepository.findByUserId(currentUser.getUser_id())
+                    .orElseThrow(() -> new RuntimeException("Estudante não encontrado"));
+
+            // Get the student's school
+            School school = student.getSchool();
+            if (school == null) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Estudante não está associado a uma escola"));
+            }
+
+            // Find feedback for this student and school
+            Optional<Feedback> feedbackOpt = repository.findByStudentIdAndSchoolId(student.getStudent_id(), school.getSchool_id());
+
+            if (feedbackOpt.isPresent()) {
+                return ResponseEntity.ok(feedbackOpt.get());
+            } else {
+                return ResponseEntity.ok(null); // No feedback submitted yet
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Falha ao buscar feedback atual: " + e.getMessage()));
+        }
+    }
+
 }
