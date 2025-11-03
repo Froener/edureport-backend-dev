@@ -28,4 +28,7 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     // Check if feedback exists for student and school
     @Query("SELECT COUNT(f) > 0 FROM Feedback f WHERE f.student.student_id = :studentId AND f.school.school_id = :schoolId")
     boolean existsByStudentIdAndSchoolId(@Param("studentId") Long studentId, @Param("schoolId") Long schoolId);
+
+    @Query("SELECT COUNT(DISTINCT f.student.student_id) FROM Feedback f WHERE f.school.school_id = :schoolId")
+    Long countDistinctStudentsBySchoolId(@Param("schoolId") Long schoolId);
 }

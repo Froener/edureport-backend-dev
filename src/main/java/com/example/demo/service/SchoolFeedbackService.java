@@ -4,7 +4,9 @@ import com.example.demo.dto.SchoolFeedbackDTO;
 import com.example.demo.dto.TagWithCountDTO;
 import com.example.demo.model.School;
 import com.example.demo.model.Tag;
+import com.example.demo.repository.FeedbackRepository;
 import com.example.demo.repository.SchoolRepository;
+import com.example.demo.repository.StudentRepository;
 import com.example.demo.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,12 @@ public class SchoolFeedbackService {
     @Autowired
     private SchoolRepository schoolRepository;
 
+    @Autowired
+    private FeedbackRepository feedbackRepository;
+
+    @Autowired
+    private StudentRepository studentRepository;
+
     public SchoolFeedbackDTO getSchoolWithFeedback(Long schoolId) {
         School school = schoolRepository.findById(schoolId).orElse(null);
         if (school == null) {
@@ -35,7 +43,10 @@ public class SchoolFeedbackService {
                 tagRepository.findNegativeTagsWithCountBySchoolId(schoolId)
         );
 
-        return new SchoolFeedbackDTO(school, positiveTags, negativeTags);
+        Long uniqueStudentCount = feedbackRepository.countDistinctStudentsBySchoolId(schoolId);
+        Long totalStudentCount = studentRepository.countBySchoolId(schoolId);
+
+        return new SchoolFeedbackDTO(school, positiveTags, negativeTags, uniqueStudentCount, totalStudentCount);
     }
 
     public List<SchoolFeedbackDTO> getAllSchoolsWithFeedback() {
@@ -50,7 +61,10 @@ public class SchoolFeedbackService {
                     tagRepository.findNegativeTagsWithCountBySchoolId(school.getSchool_id())
             );
 
-            return new SchoolFeedbackDTO(school, positiveTags, negativeTags);
+            Long uniqueStudentCount = feedbackRepository.countDistinctStudentsBySchoolId(school.getSchool_id());
+            Long totalStudentCount = studentRepository.countBySchoolId(school.getSchool_id());
+
+            return new SchoolFeedbackDTO(school, positiveTags, negativeTags, uniqueStudentCount, totalStudentCount);
         }).collect(Collectors.toList());
     }
 
